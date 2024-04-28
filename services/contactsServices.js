@@ -53,7 +53,7 @@ export async function updateContactbyId(id, contact) {
   contacts[index] = updContact;
   try {
     await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-    return contact;
+    return updContact;
   } catch (error) {
     throw error;
   }
