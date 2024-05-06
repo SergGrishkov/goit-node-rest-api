@@ -1,6 +1,7 @@
 import HttpError from "../helpers/HttpError.js";
 import { errorWrapper } from "../helpers/Wrappre.js";
 import Contact from "../db/models/Contact.js";
+import {isValidObjectId } from 'mongoose';
 
 export const getAllContacts = errorWrapper(async (req, res, next) => {
   try {
@@ -14,6 +15,10 @@ export const getAllContacts = errorWrapper(async (req, res, next) => {
 export const getOneContact = errorWrapper(async (req, res, next) => {
   const { id } = req.params;
   try {
+    if (!isValidObjectId(id)) {
+      throw HttpError(400, 'Invalid contact id');
+    }
+
     const result = await Contact.findById(id);
     if (!result) {
       throw HttpError(404);
@@ -27,6 +32,10 @@ export const getOneContact = errorWrapper(async (req, res, next) => {
 export const deleteContact = errorWrapper(async (req, res, next) => {
   const { id } = req.params;
   try {
+    if (!isValidObjectId(id)) {
+      throw HttpError(400, "Invalid contact id");
+    }
+
     const result = await Contact.findByIdAndDelete(id);
     if (!result) {
       throw HttpError(404);
@@ -50,8 +59,31 @@ export const createContact = errorWrapper(async (req, res, next) => {
 
 export const updateContact = errorWrapper(async (req, res, next) => {
   const { id } = req.params;
+  const { name, email, phone, favorite } = req.body;
+  const contact = { name, email, phone, favorite };
+  try {
+    if (!isValidObjectId(id)) {
+      throw HttpError(400, "Invalid contact id");
+    }
+
+    const result = await Contact.findByIdAndUpdate(id, contact, { new: true });
+    if (!result) {
+      throw HttpError(404);
+    }
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+export const updateFavoriteContact = errorWrapper(async (req, res, next) => {
+  const { id } = req.params;
   const { favorite } = req.body;
   try {
+    if (!isValidObjectId(id)) {
+      throw HttpError(400, "Invalid contact id");
+    }
+    
     const result = await Contact.findByIdAndUpdate(
       id,
       { favorite },
