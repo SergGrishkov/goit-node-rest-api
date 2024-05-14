@@ -20,6 +20,10 @@ export const getOneContact = errorWrapper(async (req, res, next) => {
   const { id } = req.params;
   const { id: userId } = req.user;
   try {
+    if (!userId.equals(result.owner._id)) {
+      throw HttpError(403, "You are not authorized to access this contact");
+    }
+
     const result = await Contact.findById(id).populate(
       "owner",
       "_id name email subscription"
@@ -27,10 +31,6 @@ export const getOneContact = errorWrapper(async (req, res, next) => {
 
     if (!result) {
       throw HttpError(404);
-    }
-
-    if (!userId.equals(result.owner._id)) {
-      throw HttpError(403, "You are not authorized to access this contact");
     }
 
     res.status(200).json(result);
