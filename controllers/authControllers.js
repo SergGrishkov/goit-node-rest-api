@@ -21,7 +21,7 @@ export const register = errorWrapper(async (req, res, next) => {
     password: passHash,
   });
 
-  res.status(201).json({ email, subscription: newUser.subscription });
+  res.status(201).json({ user: { email, subscription: newUser.subscription }});
 });
 
 export const login = errorWrapper(async (req, res, next) => {

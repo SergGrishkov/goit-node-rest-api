@@ -10,6 +10,15 @@ export const getAllContacts = errorWrapper(async (req, res, next) => {
       "owner",
       "_id name email subscription"
     );
+
+    if (!result) {
+      throw HttpError(404);
+    }
+
+    if (!userId.equals(result.owner._id)) {
+      throw HttpError(403, "You are not authorized to access this contact");
+    }
+
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -20,17 +29,17 @@ export const getOneContact = errorWrapper(async (req, res, next) => {
   const { id } = req.params;
   const { id: userId } = req.user;
   try {
-    if (!userId.equals(result.owner._id)) {
-      throw HttpError(403, "You are not authorized to access this contact");
-    }
-
     const result = await Contact.findById(id).populate(
       "owner",
       "_id name email subscription"
     );
-
+    
     if (!result) {
       throw HttpError(404);
+    }
+
+    if (!userId.equals(result.owner._id)) {
+      throw HttpError(403, "You are not authorized to access this contact");
     }
 
     res.status(200).json(result);
@@ -43,13 +52,14 @@ export const deleteContact = errorWrapper(async (req, res, next) => {
   const { id } = req.params;
   const { id: userId } = req.user;
   try {
-    if (!userId.equals(result.owner)) {
-      throw HttpError(403, "You are not authorized to remove this contact");
-    }
-
     const result = await Contact.findByIdAndDelete(id);
+
     if (!result) {
       throw HttpError(404);
+    }
+
+    if (!userId.equals(result.owner)) {
+      throw HttpError(403, "You are not authorized to remove this contact");
     }
 
     res.status(200).json(result);
@@ -72,13 +82,14 @@ export const updateContact = errorWrapper(async (req, res, next) => {
   const { id } = req.params;
   const { id: userId } = req.user;
   try {
-    if (!userId.equals(result.owner)) {
-      throw HttpError(403, "You are not authorized to update this contact");
-    }
-
     const result = await Contact.findByIdAndUpdate(id, req.body, { new: true });
+
     if (!result) {
       throw HttpError(404);
+    }
+
+    if (!userId.equals(result.owner)) {
+      throw HttpError(403, "You are not authorized to update this contact");
     }
 
     res.status(200).json(result);
@@ -92,10 +103,6 @@ export const updateFavoriteContact = errorWrapper(async (req, res, next) => {
   const { favorite } = req.body;
   const { id: userId } = req.user;
   try {
-    if (!userId.equals(result.owner)) {
-      throw HttpError(403, "You are not authorized to update this contact");
-    }
-
     const result = await Contact.findByIdAndUpdate(
       id,
       { favorite },
@@ -104,6 +111,10 @@ export const updateFavoriteContact = errorWrapper(async (req, res, next) => {
 
     if (!result) {
       throw HttpError(404);
+    }
+
+    if (!userId.equals(result.owner)) {
+      throw HttpError(403, "You are not authorized to update this contact");
     }
 
     res.status(200).json(result);
