@@ -11,27 +11,28 @@ export const checkAuth = async (req, _, next) => {
   if (bearer !== "Bearer") {
     return next(HttpError(401));
   }
+
   jwt.verify(token, process.env.JWT_SECRET, async (err, decode) => {
-    if (err) {
-      return next(HttpError(401));
-    }
     try {
+      if (err) {
+        return next(HttpError(401));
+      }
+
       const user = await User.findById(decode.id);
+
       if (!user || user.token !== token) {
         throw HttpError(401);
       }
-      if (!user._id || !user.email || !user.subscription) {
-        throw HttpError(401);
-      }
+
       req.user = {
         id: user._id,
         email: user.email,
         subscription: user.subscription,
       };
       next();
+      
     } catch (error) {
       next(error);
     }
   });
 };
-

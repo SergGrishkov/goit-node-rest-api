@@ -4,8 +4,8 @@ import Contact from "../db/models/Contact.js";
 import { isValidObjectId } from "mongoose";
 
 export const getAllContacts = errorWrapper(async (req, res, next) => {
-  const { id: userId } = req.user;
   try {
+    const { id: userId } = req.user;
     const result = await Contact.find({ owner: userId }).populate(
       "owner",
       "_id name email subscription"
@@ -15,10 +15,6 @@ export const getAllContacts = errorWrapper(async (req, res, next) => {
       throw HttpError(404);
     }
 
-    if (!userId.equals(result.owner._id)) {
-      throw HttpError(403, "You are not authorized to access this contact");
-    }
-
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -26,20 +22,16 @@ export const getAllContacts = errorWrapper(async (req, res, next) => {
 });
 
 export const getOneContact = errorWrapper(async (req, res, next) => {
-  const { id } = req.params;
-  const { id: userId } = req.user;
   try {
-    const result = await Contact.findById(id).populate(
+    const { id } = req.params;
+    const { userId } = req.user;
+    const result = await Contact.findById({ id, owner: userId }).populate(
       "owner",
       "_id name email subscription"
     );
-    
+
     if (!result) {
       throw HttpError(404);
-    }
-
-    if (!userId.equals(result.owner._id)) {
-      throw HttpError(403, "You are not authorized to access this contact");
     }
 
     res.status(200).json(result);
@@ -49,17 +41,13 @@ export const getOneContact = errorWrapper(async (req, res, next) => {
 });
 
 export const deleteContact = errorWrapper(async (req, res, next) => {
-  const { id } = req.params;
-  const { id: userId } = req.user;
   try {
-    const result = await Contact.findByIdAndDelete(id);
+    const { id } = req.params;
+    const { userId } = req.user;
+    const result = await Contact.findByIdAndDelete({ id, owner: userId });
 
     if (!result) {
       throw HttpError(404);
-    }
-
-    if (!userId.equals(result.owner)) {
-      throw HttpError(403, "You are not authorized to remove this contact");
     }
 
     res.status(200).json(result);
@@ -69,8 +57,8 @@ export const deleteContact = errorWrapper(async (req, res, next) => {
 });
 
 export const createContact = errorWrapper(async (req, res, next) => {
-  const { id } = req.user;
   try {
+    const { id } = req.user;
     const result = await Contact.create({ ...req.body, owner: id });
     res.status(201).json(result);
   } catch (error) {
@@ -79,17 +67,17 @@ export const createContact = errorWrapper(async (req, res, next) => {
 });
 
 export const updateContact = errorWrapper(async (req, res, next) => {
-  const { id } = req.params;
-  const { id: userId } = req.user;
   try {
-    const result = await Contact.findByIdAndUpdate(id, req.body, { new: true });
+    const { id } = req.params;
+    const { id: userId } = req.user;
+    const result = await Contact.findByIdAndUpdate(
+      { id, owner: userId },
+      req.body,
+      { new: true }
+    );
 
     if (!result) {
       throw HttpError(404);
-    }
-
-    if (!userId.equals(result.owner)) {
-      throw HttpError(403, "You are not authorized to update this contact");
     }
 
     res.status(200).json(result);
@@ -99,22 +87,18 @@ export const updateContact = errorWrapper(async (req, res, next) => {
 });
 
 export const updateFavoriteContact = errorWrapper(async (req, res, next) => {
-  const { id } = req.params;
-  const { favorite } = req.body;
-  const { id: userId } = req.user;
   try {
+    const { id } = req.params;
+    const { favorite } = req.body;
+    const { id: userId } = req.user;
     const result = await Contact.findByIdAndUpdate(
-      id,
+      { id, owner: userId },
       { favorite },
       { new: true }
     );
 
     if (!result) {
       throw HttpError(404);
-    }
-
-    if (!userId.equals(result.owner)) {
-      throw HttpError(403, "You are not authorized to update this contact");
     }
 
     res.status(200).json(result);

@@ -40,7 +40,7 @@ export const login = errorWrapper(async (req, res, next) => {
   }
 
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: 3600,
+    expiresIn: "120h",
   });
 
   await User.findByIdAndUpdate(user._id, { token });
