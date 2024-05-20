@@ -7,8 +7,7 @@ import { json } from "express";
 
 export const register = errorWrapper(async (req, res, next) => {
   const { email, password } = req.body;
-  const emailLowerCase = email.toLowerCase();
-  const user = await User.findOne({ email: emailLowerCase });
+  const user = await User.findOne({ email });
 
   if (user) {
     throw HttpError(409, "Email in use");
@@ -17,17 +16,16 @@ export const register = errorWrapper(async (req, res, next) => {
   const passHash = await bcrypt.hash(password, 10);
 
   const newUser = User.create({
-    email: emailLowerCase,
+    email,
     password: passHash,
   });
 
-  res.status(201).json({ user: { email, subscription: newUser.subscription }});
+  res.status(201).json({ user: { email, subscription: newUser.subscription } });
 });
 
 export const login = errorWrapper(async (req, res, next) => {
   const { email, password } = req.body;
-  const emailLowerCase = email.toLowerCase();
-  const user = await User.findOne({ email: emailLowerCase });
+  const user = await User.findOne({ email });
 
   if (!user) {
     throw HttpError(401, "Email or password is wrong");
