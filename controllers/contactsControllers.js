@@ -1,7 +1,6 @@
 import HttpError from "../helpers/HttpError.js";
 import { errorWrapper } from "../helpers/Wrappre.js";
 import Contact from "../db/models/Contact.js";
-import { isValidObjectId } from "mongoose";
 
 export const getAllContacts = errorWrapper(async (req, res, next) => {
   try {

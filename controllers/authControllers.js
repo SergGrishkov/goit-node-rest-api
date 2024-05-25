@@ -3,7 +3,7 @@ import { errorWrapper } from "../helpers/Wrappre.js";
 import User from "../db/models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { json } from "express";
+import gravatar from "gravatar";
 
 export const register = errorWrapper(async (req, res, next) => {
   const { email, password } = req.body;
@@ -14,10 +14,12 @@ export const register = errorWrapper(async (req, res, next) => {
   }
 
   const passHash = await bcrypt.hash(password, 10);
+  const avatarURL = gravatar.url(email);
 
   const newUser = User.create({
     email,
     password: passHash,
+    avatarURL,
   });
 
   res.status(201).json({ user: { email, subscription: newUser.subscription } });

@@ -4,12 +4,14 @@ import cors from "cors";
 import 'dotenv/config';
 import router from "./routes/index.js";
 import './server.js';
+import path from "path";
 
 const app = express();
 
 app.use(morgan("tiny"));
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.resolve("public")));
 
 app.use("/api", router);
 
