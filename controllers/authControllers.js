@@ -4,6 +4,8 @@ import User from "../db/models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import gravatar from "gravatar";
+import crypto from "crypto";
+import sendVerificationToken from "../helpers/sendVerificationToken.js";
 
 export const register = errorWrapper(async (req, res, next) => {
   const { email, password } = req.body;
@@ -15,11 +17,14 @@ export const register = errorWrapper(async (req, res, next) => {
 
   const passHash = await bcrypt.hash(password, 10);
   const avatarURL = gravatar.url(email);
+  const verificationToken = crypto.randomUUID();
+  await sendVerificationToken(email, verificationToken);
 
   const newUser = User.create({
     email,
     password: passHash,
     avatarURL,
+    verificationToken,
   });
 
   res.status(201).json({ user: { email, subscription: newUser.subscription } });
@@ -58,4 +63,47 @@ export const logout = errorWrapper(async (req, res) => {
 export const getCurrent = errorWrapper(async (req, res, next) => {
   const { email, subscription } = req.user;
   res.json({ email, subscription });
+});
+
+export const verifyEmail = errorWrapper(async (req, res) => {
+  const { verificationToken } = req.params;
+  const user = await User.findOne({ verificationToken });
+  if (!user) {
+    throw HttpError(404, "User not found");
+  }
+  if (user.verify) {
+    throw HttpError(400, "Verification has already been passed");
+  }
+  await User.findByIdAndUpdate(user._id, {
+    verify: true,
+    verificationToken: null,
+  });
+
+  res.status(200).json({
+    message: "Verification successful",
+  });
+});
+
+export const resendVerifyEmail = errorWrapper(async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw HttpError(404, "User not found");
+  }
+
+  if (user.verify) {
+    throw HttpError(400, "Verification has already been passed");
+  }
+
+  if (!user.verificationToken) {
+    const verificationToken = crypto.randomUUID();
+    user.verificationToken = verificationToken;
+    await user.save();
+  }
+
+  await sendVerificationToken(email, user.verificationToken);
+  res.json({
+    message: "Verify email sent",
+  });
 });
