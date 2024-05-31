@@ -38,6 +38,10 @@ export const login = errorWrapper(async (req, res, next) => {
     throw HttpError(401, "Email or password is wrong");
   }
 
+  if (!user.verify) {
+    throw HttpError(401, "Your account is not verified");
+  }
+
   const isCompare = await bcrypt.compare(password, user.password);
 
   if (!isCompare) {
@@ -96,11 +100,9 @@ export const resendVerifyEmail = errorWrapper(async (req, res) => {
     throw HttpError(400, "Verification has already been passed");
   }
 
-  if (!user.verificationToken) {
-    const verificationToken = crypto.randomUUID();
-    user.verificationToken = verificationToken;
-    await user.save();
-  }
+  const verificationToken = crypto.randomUUID();
+  user.verificationToken = verificationToken;
+  await user.save();
 
   await sendVerificationToken(email, user.verificationToken);
   res.json({
